@@ -1,6 +1,9 @@
+// import WebSocket from "ws";
 import http from "http";
-import WebSocket from "ws";
 import express from "express";
+// import SocketIO from "socket.io";
+const { Server } = require("socket.io");
+const { instrument } = require("@socket.io/admin-ui");
 
 const app = express();
 
@@ -12,34 +15,72 @@ app.get("/*", (_, res) => res.redirect("/"));
 
 const handleListen = () => console.log(`Listening on http://localhost:3000`);
 
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
-
-const sockets = [];
-
-wss.on("connection", (socket) => {
-  console.log("A new client connected ✅");
-  sockets.push(socket);
-  socket["nickname"] = "Anonymous";
-  socket.on("close", () => {
-    console.log("Disconnected from the client ❌");
-  });
-  socket.on("message", (message) => {
-    const parsedMessage = JSON.parse(message);
-    switch (parsedMessage.type) {
-      case "message":
-        sockets.forEach((aSocket) => {
-          if (aSocket !== socket) {
-            aSocket.send(`${socket.nickname}: ${parsedMessage.payload}`);
-          }
-        });
-        break;
-      case "nickname":
-        socket["nickname"] = parsedMessage.payload;
-        break;
-    }
-    console.log(parsedMessage);
-  });
+const httpServer = http.createServer(app);
+const wsServer = new Server(httpServer, {
+  cors: {
+    origin: ["https://admin.socket.io"],
+    credentials: true,
+  },
 });
 
-server.listen(3000, handleListen);
+instrument(wsServer, {
+  auth: false,
+  mode: "development",
+});
+
+function publicRooms() {
+  const {
+    sockets: {
+      adapter: { sids, rooms },
+    },
+  } = wsServer;
+  const publicRooms = [];
+  rooms.forEach((_, key) => {
+    if (sids.get(key) === undefined) {
+      publicRooms.push(key);
+    }
+  });
+  return publicRooms;
+}
+
+function countRoom(roomName) {
+  return wsServer.sockets.adapter.rooms.get(roomName)?.size;
+}
+
+wsServer.on("connection", (socket) => {
+
+  wsServer.sockets.emit("room_change", publicRooms());
+  socket["nickname"] = "Anonymous";
+
+  socket.onAny((event) => {
+    console.log(`Socket Event: ${event}`);
+  });
+  socket.on("enter_room", (data, done) => {
+    const { room, nickname } = data;
+    socket["nickname"] = nickname;
+    socket.join(room);
+    done();
+    socket.to(room).emit("welcome", socket.nickname, countRoom(room));
+    // update room list
+    wsServer.sockets.emit("room_change", publicRooms());
+  });
+
+  socket.on("disconnecting", () => {
+    socket.rooms.forEach((room) => {
+      socket.to(room).emit("bye", socket.nickname, countRoom(room) - 1);
+    });
+  });
+
+  socket.on("disconnect", () => {
+    wsServer.sockets.emit("room_change", publicRooms());
+  });
+
+  socket.on("new_message", (message, roomName, done) => {
+    socket.to(roomName).emit("new_message", `${socket.nickname}: ${message}`);
+    done();
+  });
+
+  socket.on("nickname", (nickname) => (socket["nickname"] = nickname));
+});
+
+httpServer.listen(3000, handleListen);

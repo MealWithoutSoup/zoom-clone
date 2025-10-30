@@ -55,13 +55,53 @@ npm start
 
 ---
 
-## DAY 3 - 4: Socket.IO 🔜
+## DAY 3 - 4: Socket.IO ✅
 
-**예정 작업:**
-- 네이티브 WebSocket → Socket.IO 마이그레이션
-- 채팅 룸/채널 기능
-- 타이핑 중 표시 기능
-- 접속자 목록 표시
+**구현 완료:**
+- Socket.IO 마이그레이션 완료 (ws → Socket.IO)
+- 방(Room) 기능 구현
+  - 방 생성 및 입장 기능
+  - 실시간 공개 방 목록 표시
+  - 방별 사용자 수 실시간 업데이트
+- 통합 입장 폼 (방 이름 + 닉네임 동시 입력)
+- Socket.IO Admin UI 통합 (`@socket.io/admin-ui`)
+- Tailwind CSS 프로젝트 설정
+  - CDN → 컴파일된 CSS로 전환
+  - 커스텀 스타일 분리 (`/public/css/`)
+  - 의미있는 클래스명으로 리팩토링
+
+**구현 상세:**
+- `server.js` - Socket.IO 서버, 방 관리, 사용자 추적
+- `public/js/app.js` - 클라이언트 Socket.IO 연결, 방 입장/퇴장 처리
+- `views/home.pug` - 통합 입장 폼, 방 목록 UI
+- `public/css/input.css` - Tailwind 기반 커스텀 스타일
+- `tailwind.config.js` - Tailwind 설정
+
+**Socket.IO 이벤트:**
+```javascript
+// Client → Server
+socket.emit("enter_room", { room, nickname }, callback)
+socket.emit("new_message", message, roomName, callback)
+
+// Server → Client
+socket.on("welcome", (nickname, userCount))
+socket.on("bye", (nickname, userCount))
+socket.on("new_message", message)
+socket.on("room_change", rooms)
+```
+
+**UI/UX 개선:**
+- 헤더와 푸터 분리된 레이아웃
+- 방 입장 폼 개선 (Room + Nickname 통합)
+- 실시간 방 목록 표시 (클릭 가능한 카드 스타일)
+- 방 제목 및 사용자 수 실시간 업데이트
+- 입장/퇴장 알림 메시지
+
+**빌드 명령어:**
+```bash
+npm run build:css    # CSS 빌드
+npm run watch:css    # CSS 파일 변경 감지 및 자동 빌드
+```
 
 ---
 
