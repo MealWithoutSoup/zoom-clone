@@ -1,17 +1,20 @@
-# Noom - Real-time Chat Application
+# Noom - Real-time Video Conference
 
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
 ![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white)
-![WebSocket](https://img.shields.io/badge/WebSocket-010101?style=for-the-badge&logo=socketdotio&logoColor=white)
+![Socket.io](https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socketdotio&logoColor=white)
+![WebRTC](https://img.shields.io/badge/WebRTC-333333?style=for-the-badge&logo=webrtc&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![Pug](https://img.shields.io/badge/Pug-A86454?style=for-the-badge&logo=pug&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 
-Node.js, WebSocket, WebRTC를 활용한 실시간 화상 채팅 애플리케이션
+Node.js, Socket.IO, WebRTC를 활용한 P2P 실시간 화상 채팅 애플리케이션
 
 ## Tech Stack
 
-- **Backend**: Node.js, Express, WebSocket (ws)
+- **Backend**: Node.js, Express, Socket.IO
+- **Real-time Communication**: WebRTC (RTCPeerConnection, RTCDataChannel)
+- **Signaling**: Socket.IO
 - **Frontend**: Vanilla JavaScript, Pug
 - **Styling**: Tailwind CSS
 - **Build Tools**: Babel, Nodemon
