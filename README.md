@@ -105,10 +105,90 @@ npm run watch:css    # CSS 파일 변경 감지 및 자동 빌드
 
 ---
 
-## DAY 5 - 7: Video Call 🔜
+## DAY 5 - 7: Video Call ✅
 
-**예정 작업:**
-- WebRTC 기반 영상/음성 통화
-- 화면 공유 기능
-- 다중 참여자 화상 통화
-- 통화 컨트롤 (음소거, 비디오 On/Off)
+**구현 완료:**
+- ✅ WebRTC 기반 P2P 영상/음성 통화
+- ✅ User A가 방 생성, User B가 입장하여 통화 시작
+- ✅ DataChannel을 활용한 P2P 실시간 채팅
+- ✅ 통화 컨트롤 (음소거, 카메라 On/Off, 카메라 선택)
+- ✅ 상대 연결 해제 시 스트림 정리 및 제거
+- ✅ Tailwind CSS 기반 2-패널 레이아웃 (비디오 + 채팅)
+
+**구현 상세:**
+
+**WebRTC 아키텍처:**
+- **Signaling**: Socket.IO가 Offer/Answer/ICE 교환 처리 (~5-10 KB)
+- **Media Transmission**: RTCPeerConnection으로 P2P 직접 전송 (~1-5 Mbps)
+- **Chat**: RTCDataChannel로 P2P 채팅 (연결 후 서버 우회)
+
+**핵심 기능:**
+
+1. **RTCPeerConnection** (`app.js:300-323`)
+   - Google 공개 STUN 서버 사용 (5개 엔드포인트)
+   - 이벤트: `icecandidate`, `addstream`
+   - Track 관리: `addTrack()`, `replaceTrack()` 카메라 전환
+
+2. **MediaStream API** (`app.js:78-116`)
+   - `getUserMedia()`로 카메라/마이크 접근
+   - Canvas + AudioContext 더미 스트림 폴백
+   - `enumerateDevices()`로 장치 목록 및 선택
+
+3. **RTCDataChannel** (`app.js:243-273`)
+   - Caller: `createDataChannel("chat")` 생성
+   - Callee: `datachannel` 이벤트로 수신
+   - 서버 없이 P2P 메시지 전송
+
+**Signaling 흐름:**
+```javascript
+1. makeConnection() → RTCPeerConnection 생성
+2. getMedia() → 카메라/마이크 스트림 획득
+3. addTrack() → 로컬 트랙 연결에 추가
+4. Caller: createOffer() → setLocalDescription() → emit("offer")
+5. Callee: setRemoteDescription(offer) → createAnswer() → emit("answer")
+6. Both: addIceCandidate() for ICE candidates (Trickle ICE)
+7. DataChannel 열림 → P2P 채팅 준비 완료
+```
+
+**미디어 컨트롤:**
+- **음소거/해제** (`app.js:120-134`): 오디오 track.enabled 토글
+- **카메라 On/Off** (`app.js:136-150`): 비디오 track.enabled 토글
+- **카메라 전환** (`app.js:152-161`): `replaceTrack()`으로 재연결 없이 전환
+- **방 나가기** (`app.js:163-185`): 연결 종료, 트랙 정지, 페이지 새로고침
+
+**스트림 정리:**
+- **사용자 나가기**: 트랙 정지, srcObject null, 연결 종료 (`app.js:293-314`)
+- **상대 연결 끊김**: `user_left` 이벤트로 동일한 정리 트리거
+- **정리 효과**: 카메라 LED 완전 꺼짐, 메모리 누수 방지, 좀비 연결 방지
+
+**에러 핸들링:**
+- **장치 접근 거부**: Alert → 더미 스트림 (검은 캔버스 + 무음)
+- **장치 없음**: 동일한 폴백 메커니즘
+- **장치 사용 중**: 동일한 폴백 (한 노트북에서 멀티 브라우저 테스트 가능)
+
+**UI/UX:**
+- 2-패널 레이아웃: 비디오 섹션 (왼쪽, flex-1) + 채팅 섹션 (오른쪽, w-96)
+- 비디오 그리드: myFace와 peerFace를 2열로 배치
+- 비디오 컨트롤: 음소거, 카메라, 카메라 선택, 방 나가기
+- 채팅 인터페이스: 메시지 목록 + 전송 버튼이 있는 입력 폼
+- 상태 표시: 방 제목, 참가자 수, 채팅 연결 상태
+
+**Socket.IO 이벤트:**
+```javascript
+// Server.js (relay only)
+socket.on("join_room", (roomName, nickname))
+socket.on("offer", (offer, roomName))
+socket.on("answer", (answer, roomName))
+socket.on("ice", (candidate, roomName))
+socket.on("leave_room", (roomName))
+socket.on("disconnecting")
+
+// App.js (client)
+socket.emit("join_room", roomName, nickname)
+socket.emit("offer", offer, roomName)
+socket.emit("answer", answer, roomName)
+socket.emit("ice", candidate, roomName)
+socket.emit("leave_room", roomName)
+socket.on("welcome", nickname)
+socket.on("user_left", nickname)
+```

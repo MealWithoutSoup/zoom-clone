@@ -160,3 +160,101 @@
 .hidden {
     display: none !important;
 }
+
+/* Video Call Styles */
+.call-container {
+    @apply flex gap-4 max-w-7xl w-full mx-auto flex-1;
+}
+
+/* Video Section (Left) */
+.video-section {
+    @apply flex-1 bg-white rounded-2xl shadow-lg p-4 flex flex-col;
+}
+
+.room-info {
+    @apply flex items-center justify-between mb-4 pb-3 border-b border-gray-200;
+}
+
+.room-title {
+    @apply text-xl font-bold text-gray-800;
+}
+
+.participant-count {
+    @apply text-sm text-gray-600 bg-indigo-100 px-3 py-1 rounded-full;
+}
+
+/* Videos Grid */
+.videos-grid {
+    @apply flex-1 grid grid-cols-2 gap-4 mb-4;
+}
+
+.video-wrapper {
+    @apply relative bg-gray-900 rounded-xl overflow-hidden shadow-lg;
+}
+
+.video-player {
+    @apply w-full h-full object-cover;
+}
+
+.video-label {
+    @apply absolute bottom-3 left-3 bg-black bg-opacity-60 text-white px-3 py-1 rounded-lg text-sm flex items-center gap-2;
+}
+
+.video-status {
+    @apply text-xs text-gray-300;
+}
+
+/* Video Controls */
+.video-controls {
+    @apply flex items-center justify-between bg-gray-50 rounded-xl p-4;
+}
+
+.controls-left {
+    @apply flex gap-3;
+}
+
+.controls-right {
+    @apply flex gap-3 items-center;
+}
+
+.control-btn {
+    @apply flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-300 rounded-xl font-medium text-gray-700 transition-all hover:bg-gray-50 hover:border-indigo-400;
+}
+
+.control-icon {
+    @apply w-5 h-5;
+}
+
+.btn-danger {
+    @apply bg-red-500 text-white border-red-500 hover:bg-red-600 hover:border-red-600;
+}
+
+.camera-select {
+    @apply px-3 py-2 bg-white border-2 border-gray-300 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200;
+}
+
+/* Chat Section (Right) */
+.chat-section {
+    @apply w-96 bg-white rounded-2xl shadow-lg flex flex-col;
+}
+
+.chat-header {
+    @apply flex items-center justify-between p-4 border-b border-gray-200;
+}
+
+.chat-title {
+    @apply text-lg font-bold text-gray-800;
+}
+
+.chat-status {
+    @apply text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full;
+}
+
+/* Welcome Card */
+.welcome-card {
+    @apply max-w-md mx-auto;
+}
+
+.welcome-title {
+    @apply text-2xl font-bold text-gray-800 mb-6 text-center;
+}
