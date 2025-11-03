@@ -217,6 +217,8 @@ async function initCall() {
   call.classList.remove("hidden");
   await getMedia();
   makeConnection();
+  // PeerConnection 준비 완료 후 방 입장
+  socket.emit("join_room", roomName, myNickname);
 }
 
 async function handleWelcomeSubmit(event) {
@@ -231,8 +233,8 @@ async function handleWelcomeSubmit(event) {
   roomTitle.innerText = `Room: ${roomName}`;
   myNicknameSpan.innerText = myNickname;
 
+  // initCall() 내부에서 makeConnection() 후 join_room emit
   await initCall();
-  socket.emit("join_room", roomName, myNickname);
 
   roomNameInput.value = "";
   nicknameInput.value = "";
@@ -241,6 +243,11 @@ async function handleWelcomeSubmit(event) {
 // ========== Socket Events ==========
 
 socket.on("welcome", async (nickname) => {
+  if (!myPeerConnection) {
+    console.error("PeerConnection not ready yet, waiting...");
+    return;
+  }
+
   // DataChannel 생성 (Caller)
   myDataChannel = myPeerConnection.createDataChannel("chat");
   myDataChannel.addEventListener("open", () => {
@@ -260,6 +267,11 @@ socket.on("welcome", async (nickname) => {
 });
 
 socket.on("offer", async (offer) => {
+  if (!myPeerConnection) {
+    console.error("PeerConnection not ready yet");
+    return;
+  }
+
   // DataChannel 수신 (Callee)
   myPeerConnection.addEventListener("datachannel", (event) => {
     myDataChannel = event.channel;
@@ -281,11 +293,19 @@ socket.on("offer", async (offer) => {
 });
 
 socket.on("answer", (answer) => {
+  if (!myPeerConnection) {
+    console.error("PeerConnection not ready yet");
+    return;
+  }
   console.log("received the answer");
   myPeerConnection.setRemoteDescription(answer);
 });
 
 socket.on("ice", (ice) => {
+  if (!myPeerConnection) {
+    console.error("PeerConnection not ready yet");
+    return;
+  }
   console.log("received candidate");
   myPeerConnection.addIceCandidate(ice);
 });
@@ -331,7 +351,7 @@ function makeConnection() {
   });
 
   myPeerConnection.addEventListener("icecandidate", handleIce);
-  myPeerConnection.addEventListener("addstream", handleAddStream);
+  myPeerConnection.addEventListener("track", handleTrack);
 
   if (myStream) {
     myStream
@@ -345,8 +365,16 @@ function handleIce(data) {
   socket.emit("ice", data.candidate, roomName);
 }
 
-function handleAddStream(data) {
-  peerFace.srcObject = data.stream;
+function handleTrack(data) {
+  console.log("Received remote track:", data.track.kind);
+
+  // 기존 스트림이 없으면 새로 생성
+  if (!peerFace.srcObject) {
+    peerFace.srcObject = new MediaStream();
+  }
+
+  // 받은 트랙을 peer 스트림에 추가
+  peerFace.srcObject.addTrack(data.track);
   document.getElementById("peerNickname").innerText = "Peer";
 }
 
